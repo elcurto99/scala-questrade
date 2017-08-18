@@ -1,6 +1,6 @@
 # scala-questrade
 
-[![Build Status](https://travis-ci.org/elcurto99/scala-questrade.svg?branch=master)](https://travis-ci.org/elcurto99/scala-questrade)
+[![Build Status](https://travis-ci.org/elcurto99/scala-questrade.svg?branch=master)](https://travis-ci.org/elcurto99/scala-questrade)[![Known Vulnerabilities](https://snyk.io/test/github/elcurto99/scala-questrade/badge.svg)](https://snyk.io/test/github/elcurto99/scala-questrade)
 
 Scala REST client API for the Questrade trading platform [http://www.questrade.com/api/documentation](http://www.questrade.com/api/documentation)
 
@@ -21,7 +21,7 @@ This package currently includes the following features:
 ### TODO
 
 * Wrappers for all **Market calls**
-* Wrappers for all **Order cal`ls**
+* Wrappers for all **Order calls**
 * Streaming quotes
 * OAuth 2.0 API requests via HTTPS (TLS)
 * Automatically request new access tokens via refresh tokens when necessary
