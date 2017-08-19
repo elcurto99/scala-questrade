@@ -10,8 +10,9 @@ import org.scalatest.{Matchers, WordSpecLike}
   */
 class QuestradeClientIntegrationTests extends WordSpecLike with Matchers {
 
-  val testRefreshToken: String = scala.io.StdIn.readLine("Enter your single use API Refresh Token: ")
+  val testRefreshToken: String = "DgcQSysAXdD64jm5oCBkz0KjNJtaDaZM0"
 
+  val loginDomain = "https://practicelogin.questrade.com/"
   var testApiUrl: String = _
   var testAccessToken: String = _
   var testAccountNumber: String = _
@@ -21,7 +22,7 @@ class QuestradeClientIntegrationTests extends WordSpecLike with Matchers {
   "The Questrade API client" should {
 
     "authenticate with the server" in {
-      val loginResponse = testClient.login(testRefreshToken)
+      val loginResponse = testClient.login(loginDomain, testRefreshToken)
 
       loginResponse shouldBe a [Login]
       this.testApiUrl = loginResponse.api_server

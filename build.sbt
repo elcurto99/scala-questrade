@@ -2,7 +2,7 @@ name := "scalaquestrade"
 
 version := "1.0"
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.3"
 
 libraryDependencies ++= Seq(
   "org.scalaj" %% "scalaj-http" % "2.3.0",

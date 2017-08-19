@@ -14,12 +14,12 @@ case class Position (
   symbolId: Int,
   openQuantity: Double,
   closedQuantity: Double,
-  currentMarketValue: Double,
+  currentMarketValue: Option[Double],
   currentPrice: Double,
-  averageEntryPrice: Double,
+  averageEntryPrice: Option[Double],
   closedPnl: Double,
   openPnl: Double,
-  totalCost: Double,
+  totalCost: Option[Double],
   isRealTime: Boolean,
   isUnderReorg: Boolean
 )

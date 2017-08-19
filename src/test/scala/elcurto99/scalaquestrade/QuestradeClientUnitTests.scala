@@ -15,6 +15,7 @@ import scalaj.http.HttpResponse
   */
 class QuestradeClientUnitTests extends WordSpecLike with Matchers {
 
+  val loginDomain = "https://login.questrade.com/"
   val testApiUrl = "https://api01.iq.questrade.com/"
   val testAccountNumber = "26598145"
   val testRefreshToken = "IZ94yQ87GQNG5TQrnWMhZKh3FwDMaWmo0"
@@ -26,7 +27,7 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
     "authenticate with the server" in {
       testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Login.json")).mkString, 200, Map())
 
-      val loginResponse = testClient.login(testRefreshToken)
+      val loginResponse = testClient.login(loginDomain, testRefreshToken)
 
       testClient.lastUrl should be (s"https://login.questrade.com/oauth2/token?grant_type=refresh_token&refresh_token=$testRefreshToken")
       loginResponse.access_token should be ("p4VTj45GhS8lY7aFoKDNZxB8yQHMOr+f")
@@ -139,7 +140,7 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
     }
 
     "retrieve a single order for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
+      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Order.json")).mkString, 200, Map())
 
       val order = testClient.getAccountOrder(testAccessToken, testApiUrl, testAccountNumber, 173577870)
 

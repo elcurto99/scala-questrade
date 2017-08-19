@@ -24,7 +24,7 @@ case class Order (
   canceledQuantity: Int,
   side: OrderSide,
   orderType: OrderType,
-  limitPrice: Double,
+  limitPrice: Option[Double],
   stopPrice: Option[Double],
   isAllOrNone: Boolean,
   isAnonymous: Boolean,
@@ -56,6 +56,6 @@ case class Order (
   strategyType: String,
   triggerStopPrice: Option[Double],
   orderGroupId: Int,
-  orderClass: String,
+  orderClass: Option[String],
   isCrossZero: Boolean
 )

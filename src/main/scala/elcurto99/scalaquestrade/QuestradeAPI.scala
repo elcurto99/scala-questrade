@@ -14,7 +14,7 @@ trait QuestradeAPI {
     * Perform a login request to get an access token for an API server
     * @see http://www.questrade.com/api/documentation/security
     */
-  def login(refreshToken: String): Login
+  def login(loginDomain: String, refreshToken: String): Login
 
   /**
     * Get the current server time in ISO format and Eastern time zone

@@ -69,6 +69,16 @@ Generate a new device authorization token, you'll need that! It's considered a "
 
 ## Running the tests
 
+Update the value in 
+
+```
+class QuestradeClientIntegrationTests extends WordSpecLike with Matchers {
+
+  val testRefreshToken: String = "AbCdefGhIjKlmnoPQrStUvwXYzOP1234567890"
+  
+  ...
+```
+
 Navigate to the projects directory in a Terminal
 
 ```
@@ -81,13 +91,13 @@ Run the tests from sbt
 sbt test
 ```
 
-The Unit tests will run
+The Unit & Integration tests will run
 
 ```
 [info] Loading global plugins from /Users/username/.sbt/0.13/plugins
 [info] Set current project to scalaquestrade (in build file:/Users/username/git/scala-questrade/)
 [info] Compiling 1 Scala source to /Users/username/git/scala-questrade/target/scala-2.12/test-classes...
-Enter your single use API Refresh Token: [info] QuestradeClientUnitTests:
+[info] QuestradeClientUnitTests:
 [info] The Questrade API client
 [info] - should authenticate with the server
 [info] - should retrieve the current server time
@@ -106,17 +116,6 @@ Enter your single use API Refresh Token: [info] QuestradeClientUnitTests:
 [info] - should retrieve the activities that occurred from a date for an account
 [info] - should retrieve the activities that occurred in a date range for an account
 [info] - should retrieve activities that occurred over the API maximum of 31 days for an account
-```
-
-Generate a new single use API refresh token in your Questrade Practice Account to enter into the console
-
-```
-AbCdefGhIjKlmnoPQrStUvwXYzOP1234567890
-```
-
-The integration tests will now run
-
-```
 [info] QuestradeClientIntegrationTests:
 [info] The Questrade API client
 [info] - should authenticate with the server

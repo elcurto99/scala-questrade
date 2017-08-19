@@ -28,7 +28,7 @@ class QuestradeClient(refreshToken: String) extends QuestradeAPI with HttpClient
         extractionFunction(httpResponse.body)
       } match {
         case Success(entity) => entity
-        case Failure(throwable) => throw new RuntimeException("Error encountered trying to extract entity from response", throwable)
+        case Failure(throwable) => throw new RuntimeException(s"Error encountered trying to extract entity from response: ${httpResponse.body}", throwable)
       }
     } else {
       val errorObject = parse(httpResponse.body).extract[Error]
@@ -37,8 +37,8 @@ class QuestradeClient(refreshToken: String) extends QuestradeAPI with HttpClient
     }
   }
 
-  override def login(refreshToken: String): Login = {
-    val httpResponse = this.makeRequest(s"https://login.questrade.com/oauth2/token?grant_type=refresh_token&refresh_token=$refreshToken", None)
+  override def login(loginDomain: String, refreshToken: String): Login = {
+    val httpResponse = this.makeRequest(s"${loginDomain}oauth2/token?grant_type=refresh_token&refresh_token=$refreshToken", None)
 
     def extractionFunction(body: String): Login = {
       parse(body).extract[Login]
