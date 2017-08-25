@@ -20,7 +20,7 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
   val testAccountNumber = "26598145"
   val testRefreshToken = "IZ94yQ87GQNG5TQrnWMhZKh3FwDMaWmo0"
   val testAccessToken = "qHUAKfM3re_D8sMdGAi9d9zMlbS53MI80"
-  val testClient = new TestableQuestradeClient(testRefreshToken)
+  val testClient = new TestableQuestradeClient()
 
   "The Questrade API client" should {
 
@@ -174,4 +174,4 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
   }
 }
 
-class TestableQuestradeClient(refreshToken: String) extends QuestradeClient(refreshToken = refreshToken) with TestableHttpClient {}
+class TestableQuestradeClient() extends QuestradeClient() with TestableHttpClient {}

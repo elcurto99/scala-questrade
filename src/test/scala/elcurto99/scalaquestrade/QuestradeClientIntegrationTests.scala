@@ -2,6 +2,7 @@ package elcurto99.scalaquestrade
 
 import java.time.ZonedDateTime
 
+import com.typesafe.config.ConfigFactory
 import elcurto99.scalaquestrade.models._
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -10,14 +11,14 @@ import org.scalatest.{Matchers, WordSpecLike}
   */
 class QuestradeClientIntegrationTests extends WordSpecLike with Matchers {
 
-  val testRefreshToken: String = "DgcQSysAXdD64jm5oCBkz0KjNJtaDaZM0"
-
-  val loginDomain = "https://practicelogin.questrade.com/"
   var testApiUrl: String = _
   var testAccessToken: String = _
   var testAccountNumber: String = _
   var testOrderNumberList: List[Int] = _
-  val testClient = new QuestradeClient(testRefreshToken)
+
+  val loginDomain: String = ConfigFactory.load().getString("questrade.api.loginUrl")
+  val testRefreshToken: String = ConfigFactory.load().getString("questrade.api.refreshToken")
+  val testClient = new QuestradeClient()
 
   "The Questrade API client" should {
 

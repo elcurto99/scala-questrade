@@ -22,6 +22,7 @@ This package currently includes the following features:
 
 * Wrappers for all **Market calls**
 * Wrappers for all **Order calls**
+* Deploy the library to Maven Central
 * Streaming quotes
 * OAuth 2.0 API requests via HTTPS (TLS)
 * Automatically request new access tokens via refresh tokens when necessary
@@ -38,11 +39,11 @@ java -version
 ```
 If you don't have version 1.8 you can [download Java here](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 
-#### Scala 2.12.2
+#### Scala 2.12.3
 
 Install Scala, either by installing an IDE (such as [IntelliJ](https://www.jetbrains.com/idea/)), or Scala's build tool ([sbt](http://www.scala-sbt.org/download.html)).
 
-See `https://www.scala-lang.org/download/2.12.2.html` for full details.
+See `https://www.scala-lang.org/download/2.12.3.html` for full details.
 
 #### Questrade Practice Account
 
@@ -65,19 +66,13 @@ Generate a new device authorization token, you'll need that! It's considered a "
 1. `git clone git@github.com:elcurto99/scala-questrade.git`
 2. IntelliJ IDEA > File > New > Project from Existing Sources...
 3. Open the directory we just checked out
-4. **TODO**
+4. Import Project from SBT
+5. Create project from existing sources
+6. Click Next through the setup modal to finish the setup
 
 ## Running the tests
 
-Update the value in 
-
-```
-class QuestradeClientIntegrationTests extends WordSpecLike with Matchers {
-
-  val testRefreshToken: String = "AbCdefGhIjKlmnoPQrStUvwXYzOP1234567890"
-  
-  ...
-```
+Update the value for `questrade.api.refreshToken` in `/test/resources/application.conf` with your own freshly generated practice account refresh token.
 
 Navigate to the projects directory in a Terminal
 
@@ -145,7 +140,37 @@ The Unit & Integration tests will run
 
 ## Deployment
 
-**TODO**: Add additional notes about how to deploy this on a live system
+To include this as a dependency in a SBT project:
+
+Add this `build.properties` file to your `/project/` directory.
+```
+sbt.version = 0.13.16
+```
+
+Add this `Build.scala` field to your `/project/` directory.
+```
+import sbt._
+
+object MyBuild extends Build {
+
+  lazy val root = Project("root", file(".")) dependsOn(apiClient)
+  lazy val apiClient = RootProject(uri("git://github.com/elcurto99/scala-questrade.git#master"))
+}
+```
+
+Now we can use the API client as a dependency in our project:
+```
+import elcurto99.scalaquestrade.QuestradeClient
+
+object Test extends App {
+
+  val apiClient = new QuestradeClient()
+
+  val login = apiClient.login("https://practicelogin.questrade.com/", "AbCdefGhIjKlmnoPQrStUvwXYzOP1234567890")
+
+  val accounts = apiClient.getAccounts(login.access_token, login.api_server)
+}
+```
 
 ## Built With
 
@@ -156,6 +181,7 @@ The Unit & Integration tests will run
 * [Json4s](http://json4s.org/)
 * [slf4j](https://www.slf4j.org/)
 * [ScalaTest](http://www.scalatest.org/)
+* [typesafe-config](https://github.com/typesafehub/config)
 
 ## Versioning
 

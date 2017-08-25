@@ -17,10 +17,10 @@ import scalaj.http.HttpResponse
 /**
   * A Scala based REST client for the Questrade API
   */
-class QuestradeClient(refreshToken: String) extends QuestradeAPI with HttpClient {
+class QuestradeClient() extends QuestradeAPI with HttpClient {
 
-  val log : Logger = LoggerFactory.getLogger(this.getClass)
-  implicit val formats: Formats = DefaultFormats + new EnumNameSerializer(Currency) + new EnumNameSerializer(AccountType) + new EnumNameSerializer(AccountStatus) + new EnumNameSerializer(ClientAccountType) + new EnumNameSerializer(OrderSide) + new EnumNameSerializer(OrderType) + new EnumNameSerializer(OrderTimeInForce) + new EnumNameSerializer(OrderState)
+  protected val log : Logger = LoggerFactory.getLogger(this.getClass)
+  implicit protected val formats: Formats = DefaultFormats + new EnumNameSerializer(Currency) + new EnumNameSerializer(AccountType) + new EnumNameSerializer(AccountStatus) + new EnumNameSerializer(ClientAccountType) + new EnumNameSerializer(OrderSide) + new EnumNameSerializer(OrderType) + new EnumNameSerializer(OrderTimeInForce) + new EnumNameSerializer(OrderState)
 
   protected def tryAndExtractObject[T](httpResponse: HttpResponse[String], extractionFunction: String => T): T = {
     if (httpResponse.isSuccess) {
@@ -87,7 +87,7 @@ class QuestradeClient(refreshToken: String) extends QuestradeAPI with HttpClient
     this.tryAndExtractObject(httpResponse, extractionFunction)
   }
 
-  override def getAccountExecutions(accessToken: String, apiServer: String, accountNumber: String, startTimeOption: Option[ZonedDateTime], endTimeOption: Option[ZonedDateTime]): List[Execution] = {
+  override def getAccountExecutions(accessToken: String, apiServer: String, accountNumber: String, startTimeOption: Option[ZonedDateTime] = None, endTimeOption: Option[ZonedDateTime] = None): List[Execution] = {
     val url = (startTimeOption, endTimeOption) match {
       case (Some(startDateTime), None)              => s"${apiServer}v1/accounts/$accountNumber/executions?startTime=$startDateTime"
       case (Some(startDateTime), Some(endDateTime)) => s"${apiServer}v1/accounts/$accountNumber/executions?startTime=$startDateTime&endTime=$endDateTime"
@@ -103,7 +103,7 @@ class QuestradeClient(refreshToken: String) extends QuestradeAPI with HttpClient
     this.tryAndExtractObject(httpResponse, extractionFunction)
   }
 
-  override def getAccountOrders(accessToken: String, apiServer: String, accountNumber: String, startTimeOption: Option[ZonedDateTime], endTimeOption: Option[ZonedDateTime], stateFilterOption: Option[OrderStateFilterType], orderIdsList: List[Int]): List[Order] = {
+  override def getAccountOrders(accessToken: String, apiServer: String, accountNumber: String, startTimeOption: Option[ZonedDateTime] = None, endTimeOption: Option[ZonedDateTime] = None, stateFilterOption: Option[OrderStateFilterType] = None, orderIdsList: List[Int] = List()): List[Order] = {
     val url = (startTimeOption, endTimeOption, stateFilterOption, orderIdsList) match {
       case (_, _, _, `orderIdsList`) if orderIdsList.nonEmpty              => s"${apiServer}v1/accounts/$accountNumber/orders?ids=${orderIdsList.mkString(",")}"
       case (Some(startDateTime), None, None, _)                            => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=$startDateTime"
