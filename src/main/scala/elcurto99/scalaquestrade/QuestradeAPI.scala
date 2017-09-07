@@ -1,6 +1,6 @@
 package elcurto99.scalaquestrade
 
-import java.time.ZonedDateTime
+import java.time.{LocalDateTime, ZonedDateTime}
 
 import elcurto99.scalaquestrade.models.OrderStateFilterType.OrderStateFilterType
 import elcurto99.scalaquestrade.models._
@@ -44,13 +44,13 @@ trait QuestradeAPI {
     * Retrieves executions in a specified account in the defined time range
     * @see http://www.questrade.com/api/documentation/rest-operations/account-calls/accounts-id-executions
     */
-  def getAccountExecutions(accessToken: String, apiServer: String, accountNumber: String, startTimeOption: Option[ZonedDateTime], endTimeOption: Option[ZonedDateTime]): List[Execution]
+  def getAccountExecutions(accessToken: String, apiServer: String, accountNumber: String, startDateTimeOption: Option[LocalDateTime], endTimeOption: Option[LocalDateTime]): List[Execution]
 
   /**
     * Retrieves orders for a specified account
     * @see http://www.questrade.com/api/documentation/rest-operations/account-calls/accounts-id-orders
     */
-  def getAccountOrders(accessToken: String, apiServer: String, accountNumber: String, startTimeOption: Option[ZonedDateTime], endTimeOption: Option[ZonedDateTime], stateFilterOption: Option[OrderStateFilterType], orderIdsList: List[Int]): List[Order]
+  def getAccountOrders(accessToken: String, apiServer: String, accountNumber: String, startDateTimeOption: Option[LocalDateTime], endTimeOption: Option[LocalDateTime], stateFilterOption: Option[OrderStateFilterType], orderIdsList: List[Int]): List[Order]
 
   /**
     * Retrieves an order for a specified account
@@ -63,5 +63,5 @@ trait QuestradeAPI {
     * Due to this endpoints limit of 31 days of data can be requested at a time, requests for larger ranges of data will be broken up and consume more API calls
     * @see http://www.questrade.com/api/documentation/rest-operations/account-calls/accounts-id-activities
     */
-  def getAccountActivities(accessToken: String, apiServer: String, accountNumber: String, startDateTime: ZonedDateTime, endTimeOption: Option[ZonedDateTime]): List[Activity]
+  def getAccountActivities(accessToken: String, apiServer: String, accountNumber: String, startDateTime: LocalDateTime, endDateTimeOption: Option[LocalDateTime]): List[Activity]
 }

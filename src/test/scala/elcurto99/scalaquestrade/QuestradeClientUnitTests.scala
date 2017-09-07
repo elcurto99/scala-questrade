@@ -20,11 +20,12 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
   val testAccountNumber = "26598145"
   val testRefreshToken = "IZ94yQ87GQNG5TQrnWMhZKh3FwDMaWmo0"
   val testAccessToken = "qHUAKfM3re_D8sMdGAi9d9zMlbS53MI80"
-  val testClient = new TestableQuestradeClient()
 
   "The Questrade API client" should {
 
     "authenticate with the server" in {
+      val testClient = new TestableQuestradeClient()
+
       testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Login.json")).mkString, 200, Map())
 
       val loginResponse = testClient.login(loginDomain, testRefreshToken)
@@ -38,6 +39,8 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
     }
 
     "retrieve the current server time" in {
+      val testClient = new TestableQuestradeClient()
+
       testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Time.json")).mkString, 200, Map())
 
       val currentServerTime = testClient.getTime(testAccessToken, testApiUrl)
@@ -47,6 +50,8 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
     }
 
     "retrieve the accounts list" in {
+      val testClient = new TestableQuestradeClient()
+
       testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Accounts.json")).mkString, 200, Map())
 
       val accountsList = testClient.getAccounts(testAccessToken, testApiUrl)
@@ -56,6 +61,8 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
     }
 
     "retrieve the positions for an account" in {
+      val testClient = new TestableQuestradeClient()
+
       testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Positions.json")).mkString, 200, Map())
 
       testClient.getAccountPositions(testAccessToken, testApiUrl, testAccountNumber)
@@ -64,6 +71,8 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
     }
 
     "retrieve the balances for an account" in {
+      val testClient = new TestableQuestradeClient()
+
       testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Balances.json")).mkString, 200, Map())
 
       val balances = testClient.getAccountBalances(testAccessToken, testApiUrl, testAccountNumber)
@@ -75,71 +84,117 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
       balances.sodCombinedBalances should have size 2
     }
 
-    "retrieve the executions that occurred today for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Executions.json")).mkString, 200, Map())
+    "retrieve the account executions" that {
 
-      testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, None, None)
+      "occurred today" in {
+        val testClient = new TestableQuestradeClient()
 
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/executions")
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Executions.json")).mkString, 200, Map())
+
+        testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, None, None)
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/executions")
+      }
+
+      "occurred from a date" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Executions.json")).mkString, 200, Map())
+
+        testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-01-01T00:00")), None)
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/executions?startTime=2017-01-01T00:00-05:00")
+      }
+
+      "occurred in a date range" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Executions.json")).mkString, 200, Map())
+
+        testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-01-01T00:00")), Some(LocalDateTime.parse("2017-12-31T23:59:59.999999")))
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/executions?startTime=2017-01-01T00:00-05:00&endTime=2017-12-31T23:59:59.999999-05:00")
+      }
+
+      "occurred across the daylight savings boundary (UTC-5 => UTC-4)" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Executions.json")).mkString, 200, Map())
+
+        testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-03-01T00:00")), Some(LocalDateTime.parse("2017-03-30T00:00")))
+
+        testClient.requestUrls.head should be (s"${testApiUrl}v1/accounts/$testAccountNumber/executions?startTime=2017-03-01T00:00-05:00&endTime=2017-03-30T00:00-04:00")
+      }
     }
 
-    "retrieve the executions that occurred from a date for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Executions.json")).mkString, 200, Map())
+    "retrieve the account orders" that {
 
-      testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(ZonedDateTime.parse("2017-01-01T00:00-04:00")), None)
+      "occurred today" in {
+        val testClient = new TestableQuestradeClient()
 
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/executions?startTime=2017-01-01T00:00-04:00")
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
+
+        testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, None, List())
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders")
+      }
+
+      "occurred from a date" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
+
+        testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-01-01T00:00")), None, None, List())
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?startTime=2017-01-01T00:00-05:00")
+      }
+
+      "occurred in a date range" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
+
+        testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-01-01T00:00:00")), Some(LocalDateTime.parse("2017-12-31T23:59:59.999999")), None, List())
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?startTime=2017-01-01T00:00-05:00&endTime=2017-12-31T23:59:59.999999-05:00")
+      }
+
+      "occurred across the daylight savings boundary (UTC-5 => UTC-4)" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
+
+        testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-03-01T00:00")), Some(LocalDateTime.parse("2017-03-30T00:00")), None, List())
+
+        testClient.requestUrls.head should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?startTime=2017-03-01T00:00-05:00&endTime=2017-03-30T00:00-04:00")
+      }
+
+      "have a specific state" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
+
+        testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, Some(OrderStateFilterType.Open), List())
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?stateFilter=Open")
+      }
+
+      "have a specific orderId" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
+
+        testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, None, List(173577870, 173577871))
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?ids=173577870,173577871")
+      }
+
     }
 
-    "retrieve the executions that occurred in a date range for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Executions.json")).mkString, 200, Map())
-
-      testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(ZonedDateTime.parse("2017-01-01T00:00-04:00")), Some(ZonedDateTime.parse("2017-12-31T23:59:59.999999-04:00")))
-
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/executions?startTime=2017-01-01T00:00-04:00&endTime=2017-12-31T23:59:59.999999-04:00")
-    }
-
-    "retrieve the orders the occurred today for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
-
-      testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, None, List())
-
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders")
-    }
-
-    "retrieve the orders that occurred from a date for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
-
-      testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(ZonedDateTime.parse("2017-01-01T00:00-04:00")), None, None, List())
-
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?startTime=2017-01-01T00:00-04:00")
-    }
-
-    "retrieve the orders that occurred in a date range for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
-
-      testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(ZonedDateTime.parse("2017-01-01T00:00-04:00")), Some(ZonedDateTime.parse("2017-12-31T23:59:59.999999-04:00")), None, List())
-
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?startTime=2017-01-01T00:00-04:00&endTime=2017-12-31T23:59:59.999999-04:00")
-    }
-
-    "retrieve the orders of a specific state for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
-
-      testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, Some(OrderStateFilterType.Open), List())
-
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?stateFilter=Open")
-    }
-
-    "retrieve specific orders by orderId for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Orders.json")).mkString, 200, Map())
-
-      testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, None, List(173577870, 173577871))
-
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/orders?ids=173577870,173577871")
-    }
 
     "retrieve a single order for an account" in {
+      val testClient = new TestableQuestradeClient()
+
       testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Order.json")).mkString, 200, Map())
 
       val order = testClient.getAccountOrder(testAccessToken, testApiUrl, testAccountNumber, 173577870)
@@ -148,28 +203,68 @@ class QuestradeClientUnitTests extends WordSpecLike with Matchers {
       order.id should be (173577870)
     }
 
-    "retrieve the activities that occurred from a date for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
+    "retrieve account activities" that {
 
-      testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, ZonedDateTime.of(LocalDate.now().withDayOfMonth(1), LocalTime.MIN, ZoneId.from(ZoneOffset.of("-04:00"))), None)
+      "occurred from a date" in {
+        val testClient = new TestableQuestradeClient()
 
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/activities?startTime=${LocalDate.now().withDayOfMonth(1)}T00:00-04:00&endTime=${LocalDate.now()}T23:59:59.999999999-04:00")
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
+
+        testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.of(LocalDate.now().withDayOfMonth(1), LocalTime.MIN), None)
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/activities?startTime=${LocalDate.now().withDayOfMonth(1)}T00:00-04:00&endTime=${LocalDate.now()}T23:59:59.999999999-04:00")
+      }
+
+      "occurred in a date range" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
+
+        testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.parse("2017-01-01T00:00"), Some(LocalDateTime.parse("2017-01-31T23:59:59.999999")))
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/activities?startTime=2017-01-31T00:00-05:00&endTime=2017-01-31T23:59:59.999999-05:00")
+      }
+
+      "occurred over the API maximum of 31 days" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
+
+        testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.parse("2017-01-01T00:00"), Some(LocalDateTime.parse("2017-02-28T23:59:59.999999")))
+
+        testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/activities?startTime=2017-01-31T00:00-05:00&endTime=2017-02-28T23:59:59.999999-05:00")
+      }
+
+      "occurred across the daylight savings boundary (UTC-5 => UTC-4)" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
+
+        testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.parse("2017-03-01T00:00"), None)
+
+        testClient.requestUrls.head should be (s"${testApiUrl}v1/accounts/$testAccountNumber/activities?startTime=2017-03-01T00:00-05:00&endTime=2017-03-30T23:59:59.999999999-04:00")
+      }
+
+      "occurred across the daylight savings boundary (UTC-4 => UTC-5)" in {
+        val testClient = new TestableQuestradeClient()
+
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
+
+        testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.parse("2016-11-01T00:00"), None)
+
+        testClient.requestUrls.head should be (s"${testApiUrl}v1/accounts/$testAccountNumber/activities?startTime=2016-11-01T00:00-04:00&endTime=2016-11-30T23:59:59.999999999-05:00")
+      }
+
     }
 
-    "retrieve the activities that occurred in a date range for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
+    "throw an exception" when {
+      "getting account activities with a start date in the future" in {
+        val testClient = new TestableQuestradeClient()
 
-      testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, ZonedDateTime.parse("2017-01-01T00:00-04:00"), Some(ZonedDateTime.parse("2017-01-31T23:59:59.999999-04:00")))
+        testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
 
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/activities?startTime=2017-01-31T00:00-04:00&endTime=2017-01-31T23:59:59.999999-04:00")
-    }
-
-    "retrieve activities that occurred over the API maximum of 31 days for an account" in {
-      testClient.nextResponse = HttpResponse(Source.fromInputStream(this.getClass.getResourceAsStream("/" + "Activities.json")).mkString, 200, Map())
-
-      testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, ZonedDateTime.parse("2017-01-01T00:00-04:00"), Some(ZonedDateTime.parse("2017-12-31T23:59:59.999999-04:00")))
-
-      testClient.lastUrl should be (s"${testApiUrl}v1/accounts/$testAccountNumber/activities?startTime=2017-12-27T00:00-04:00&endTime=2017-12-31T23:59:59.999999-04:00")
+        an [IllegalArgumentException] should be thrownBy testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.now.plusYears(1), None)
+      }
     }
   }
 }

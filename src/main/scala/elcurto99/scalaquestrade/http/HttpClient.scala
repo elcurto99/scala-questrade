@@ -1,5 +1,6 @@
 package elcurto99.scalaquestrade.http
 
+import scala.collection.mutable
 import scalaj.http.{Http, HttpResponse}
 
 /**
@@ -20,10 +21,11 @@ trait HttpClient {
 trait TestableHttpClient extends HttpClient {
 
   var nextResponse: HttpResponse[String] = _
-  var lastUrl: String = _
+  val requestUrls: mutable.Queue[String] = mutable.Queue[String]()
+  def lastUrl: String = requestUrls.last
 
   override def makeRequest(url: String, accessTokenOption: Option[String]): HttpResponse[String] = {
-    this.lastUrl = url
+    requestUrls += url
 
     nextResponse
   }

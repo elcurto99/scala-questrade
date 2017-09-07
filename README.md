@@ -89,9 +89,6 @@ sbt test
 The Unit & Integration tests will run
 
 ```
-[info] Loading global plugins from /Users/username/.sbt/0.13/plugins
-[info] Set current project to scalaquestrade (in build file:/Users/username/git/scala-questrade/)
-[info] Compiling 1 Scala source to /Users/username/git/scala-questrade/target/scala-2.12/test-classes...
 [info] QuestradeClientUnitTests:
 [info] The Questrade API client
 [info] - should authenticate with the server
@@ -99,18 +96,27 @@ The Unit & Integration tests will run
 [info] - should retrieve the accounts list
 [info] - should retrieve the positions for an account
 [info] - should retrieve the balances for an account
-[info] - should retrieve the executions that occurred today for an account
-[info] - should retrieve the executions that occurred from a date for an account
-[info] - should retrieve the executions that occurred in a date range for an account
-[info] - should retrieve the orders the occurred today for an account
-[info] - should retrieve the orders that occurred from a date for an account
-[info] - should retrieve the orders that occurred in a date range for an account
-[info] - should retrieve the orders of a specific state for an account
-[info] - should retrieve specific orders by orderId for an account
+[info]   should retrieve the account executions that
+[info]   - occurred today
+[info]   - occurred from a date
+[info]   - occurred in a date range
+[info]   - occurred across the daylight savings boundary (UTC-5 => UTC-4)
+[info]   should retrieve the account orders that
+[info]   - occurred today
+[info]   - occurred from a date
+[info]   - occurred in a date range
+[info]   - occurred across the daylight savings boundary (UTC-5 => UTC-4)
+[info]   - have a specific state
+[info]   - have a specific orderId
 [info] - should retrieve a single order for an account
-[info] - should retrieve the activities that occurred from a date for an account
-[info] - should retrieve the activities that occurred in a date range for an account
-[info] - should retrieve activities that occurred over the API maximum of 31 days for an account
+[info]   should retrieve account activities that
+[info]   - occurred from a date
+[info]   - occurred in a date range
+[info]   - occurred over the API maximum of 31 days
+[info]   - occurred across the daylight savings boundary (UTC-5 => UTC-4)
+[info]   - occurred across the daylight savings boundary (UTC-4 => UTC-5)
+[info]   should throw an exception
+[info]   - when getting account activities with a start date in the future
 [info] QuestradeClientIntegrationTests:
 [info] The Questrade API client
 [info] - should authenticate with the server
@@ -118,24 +124,28 @@ The Unit & Integration tests will run
 [info] - should retrieve the accounts list
 [info] - should retrieve the positions for an account
 [info] - should retrieve the balances for an account
-[info] - should retrieve the executions that occurred today for an account
-[info] - should retrieve the executions that occurred from a date for an account
-[info] - should retrieve the executions that occurred in a date range for an account
-[info] - should retrieve the orders the occurred today for an account
-[info] - should retrieve the orders that occurred from a date for an account
-[info] - should retrieve the orders that occurred in a date range for an account
-[info] - should retrieve the orders of a specific state for an account
-[info] - should retrieve specific orders by orderId for an account
+[info]   should retrieve the account executions that
+[info]   - occurred today
+[info]   - occurred from a date
+[info]   - occurred in a date range
+[info]   should retrieve the account orders that
+[info]   - occurred today
+[info]   - occurred from a date
+[info]   - occurred in a date range
+[info]   - have a specific state
+[info]   - have a specific orderId
 [info] - should retrieve a single order for an account
-[info] - should retrieve the activities that occurred from a date for an account
-[info] - should retrieve the activities that occurred under the API maximum of 31 days for an account
-[info] - should retrieve activities that occurred over the API maximum of 31 days for an account
-[info] Run completed in 2 minutes, 33 seconds.
-[info] Total number of tests run: 34
+[info]   should retrieve the account activities that
+[info]   - occurred from a date
+[info]   - occurred under the API maximum of 31 days
+[info]   - occurred over the API maximum of 31 days
+[info]   - occurred over the API maximum of 31 days up until now
+[info] Run completed in 13 seconds, 504 milliseconds.
+[info] Total number of tests run: 40
 [info] Suites: completed 2, aborted 0
-[info] Tests: succeeded 34, failed 0, canceled 0, ignored 0, pending 0
+[info] Tests: succeeded 40, failed 0, canceled 0, ignored 0, pending 0
 [info] All tests passed.
-[success] Total time: 344 s, completed 18-Aug-2017 6:09:12 AM
+[success] Total time: 29 s, completed 7-Sep-2017 7:03:21 AM
 ```
 
 ## Deployment

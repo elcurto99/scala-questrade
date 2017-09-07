@@ -1,6 +1,6 @@
 package elcurto99.scalaquestrade
 
-import java.time.{LocalDate, LocalTime, ZoneId, ZonedDateTime}
+import java.time._
 
 import elcurto99.scalaquestrade.exceptions.QuestradeApiError
 import elcurto99.scalaquestrade.http.HttpClient
@@ -87,10 +87,10 @@ class QuestradeClient() extends QuestradeAPI with HttpClient {
     this.tryAndExtractObject(httpResponse, extractionFunction)
   }
 
-  override def getAccountExecutions(accessToken: String, apiServer: String, accountNumber: String, startTimeOption: Option[ZonedDateTime] = None, endTimeOption: Option[ZonedDateTime] = None): List[Execution] = {
-    val url = (startTimeOption, endTimeOption) match {
-      case (Some(startDateTime), None)              => s"${apiServer}v1/accounts/$accountNumber/executions?startTime=$startDateTime"
-      case (Some(startDateTime), Some(endDateTime)) => s"${apiServer}v1/accounts/$accountNumber/executions?startTime=$startDateTime&endTime=$endDateTime"
+  override def getAccountExecutions(accessToken: String, apiServer: String, accountNumber: String, startDateTimeOption: Option[LocalDateTime] = None, endDateTimeOption: Option[LocalDateTime] = None): List[Execution] = {
+    val url = (startDateTimeOption, endDateTimeOption) match {
+      case (Some(startDateTime), None)              => s"${apiServer}v1/accounts/$accountNumber/executions?startTime=${this.getZonedDateTimeForAPI(startDateTime)}"
+      case (Some(startDateTime), Some(endDateTime)) => s"${apiServer}v1/accounts/$accountNumber/executions?startTime=${this.getZonedDateTimeForAPI(startDateTime)}&endTime=${this.getZonedDateTimeForAPI(endDateTime)}"
       case _                                        => s"${apiServer}v1/accounts/$accountNumber/executions"
     }
 
@@ -103,13 +103,13 @@ class QuestradeClient() extends QuestradeAPI with HttpClient {
     this.tryAndExtractObject(httpResponse, extractionFunction)
   }
 
-  override def getAccountOrders(accessToken: String, apiServer: String, accountNumber: String, startTimeOption: Option[ZonedDateTime] = None, endTimeOption: Option[ZonedDateTime] = None, stateFilterOption: Option[OrderStateFilterType] = None, orderIdsList: List[Int] = List()): List[Order] = {
-    val url = (startTimeOption, endTimeOption, stateFilterOption, orderIdsList) match {
+  override def getAccountOrders(accessToken: String, apiServer: String, accountNumber: String, startDateTimeOption: Option[LocalDateTime] = None, endDateTimeOption: Option[LocalDateTime] = None, stateFilterOption: Option[OrderStateFilterType] = None, orderIdsList: List[Int] = List()): List[Order] = {
+    val url = (startDateTimeOption, endDateTimeOption, stateFilterOption, orderIdsList) match {
       case (_, _, _, `orderIdsList`) if orderIdsList.nonEmpty              => s"${apiServer}v1/accounts/$accountNumber/orders?ids=${orderIdsList.mkString(",")}"
-      case (Some(startDateTime), None, None, _)                            => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=$startDateTime"
-      case (Some(startDateTime), None, Some(stateFilter), _)               => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=$startDateTime&stateFilter=$stateFilter"
-      case (Some(startDateTime), Some(endDateTime), None, _)               => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=$startDateTime&endTime=$endDateTime"
-      case (Some(startDateTime), Some(endDateTime), Some(stateFilter), _)  => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=$startDateTime&endTime=$endDateTime&stateFilter=$stateFilter"
+      case (Some(startDateTime), None, None, _)                            => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=${this.getZonedDateTimeForAPI(startDateTime)}"
+      case (Some(startDateTime), None, Some(stateFilter), _)               => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=${this.getZonedDateTimeForAPI(startDateTime)}&stateFilter=$stateFilter"
+      case (Some(startDateTime), Some(endDateTime), None, _)               => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=${this.getZonedDateTimeForAPI(startDateTime)}&endTime=${this.getZonedDateTimeForAPI(endDateTime)}"
+      case (Some(startDateTime), Some(endDateTime), Some(stateFilter), _)  => s"${apiServer}v1/accounts/$accountNumber/orders?startTime=${this.getZonedDateTimeForAPI(startDateTime)}&endTime=${this.getZonedDateTimeForAPI(endDateTime)}&stateFilter=$stateFilter"
       case (None, None, Some(stateFilter), _)                              => s"${apiServer}v1/accounts/$accountNumber/orders?stateFilter=$stateFilter"
       case _                                                               => s"${apiServer}v1/accounts/$accountNumber/orders"
     }
@@ -133,14 +133,28 @@ class QuestradeClient() extends QuestradeAPI with HttpClient {
     this.tryAndExtractObject(httpResponse, extractionFunction)
   }
 
-  override def getAccountActivities(accessToken: String, apiServer: String, accountNumber: String, startDateTime: ZonedDateTime, endTimeOption: Option[ZonedDateTime]): List[Activity] = {
+  override def getAccountActivities(accessToken: String, apiServer: String, accountNumber: String, startDateTime: LocalDateTime, endDateTimeOption: Option[LocalDateTime]): List[Activity] = {
 
-    val endDateTime = endTimeOption match {
-      case None           => ZonedDateTime.of(LocalDate.now(), LocalTime.MAX, ZoneId.from(startDateTime))
+    val convertedEndDateTimeOption = endDateTimeOption match {
+      case Some(endDateTime) => Some(this.getZonedDateTimeForAPI(endDateTime))
+      case None              => None
+    }
+
+    this.getAccountActivities(accessToken, apiServer, accountNumber, this.getZonedDateTimeForAPI(startDateTime), convertedEndDateTimeOption)
+  }
+
+  protected def getAccountActivities(accessToken: String, apiServer: String, accountNumber: String, startDateTime: ZonedDateTime, endDateTimeOption: Option[ZonedDateTime]): List[Activity] = {
+
+    if (startDateTime.isAfter(this.getZonedDateTimeForAPI(LocalDateTime.of(LocalDate.now(), LocalTime.MAX)))) {
+      throw new IllegalArgumentException("The startDateTime must occur before the current date/time.")
+    }
+
+    val endDateTime = endDateTimeOption match {
+      case None           => this.getZonedDateTimeForAPI(LocalDateTime.of(LocalDate.now(), LocalTime.MAX))
       case Some(dateTime) => dateTime
     }
 
-    val oneMonthAfterStart = startDateTime.plusDays(30).minusNanos(1)
+    val oneMonthAfterStart = this.getZonedDateTimeForAPI(startDateTime.plusDays(30).minusNanos(1).toLocalDateTime)
 
     if (oneMonthAfterStart.isBefore(endDateTime)) {
       val firstList = this.requestAccountActivities(accessToken, apiServer, accountNumber, startDateTime, oneMonthAfterStart)
@@ -164,4 +178,7 @@ class QuestradeClient() extends QuestradeAPI with HttpClient {
     this.tryAndExtractObject(httpResponse, extractionFunction)
   }
 
+  protected def getZonedDateTimeForAPI(dateTime: LocalDateTime): ZonedDateTime = {
+    ZonedDateTime.of(dateTime, ZoneId.of("America/Toronto").getRules.getOffset(dateTime))
+  }
 }

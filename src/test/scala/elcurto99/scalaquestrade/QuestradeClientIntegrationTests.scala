@@ -1,6 +1,6 @@
 package elcurto99.scalaquestrade
 
-import java.time.ZonedDateTime
+import java.time._
 
 import com.typesafe.config.ConfigFactory
 import elcurto99.scalaquestrade.models._
@@ -67,62 +67,70 @@ class QuestradeClientIntegrationTests extends WordSpecLike with Matchers {
       balances.sodCombinedBalances.head shouldBe a [Balance]
     }
 
-    "retrieve the executions that occurred today for an account" in {
-      val executions = testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, None, None)
+    "retrieve the account executions" that {
 
-      executions shouldBe a [List[_]]
-      if (executions.nonEmpty) executions.head shouldBe a [Execution]
+      "occurred today" in {
+        val executions = testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, None, None)
+
+        executions shouldBe a [List[_]]
+        if (executions.nonEmpty) executions.head shouldBe a [Execution]
+      }
+
+      "occurred from a date" in {
+        val executions = testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-01-01T00:00:00.000000")), None)
+
+        executions shouldBe a [List[_]]
+        if (executions.nonEmpty) executions.head shouldBe a [Execution]
+      }
+
+      "occurred in a date range" in {
+        val executions = testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-01-01T00:00:00.000000")), Some(LocalDateTime.parse("2017-12-31T23:59:59.999999")))
+
+        executions shouldBe a [List[_]]
+        if (executions.nonEmpty) executions.head shouldBe a [Execution]
+      }
+
     }
 
-    "retrieve the executions that occurred from a date for an account" in {
-      val executions = testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(ZonedDateTime.parse("2017-01-01T00:00:00.000000-04:00")), None)
+    "retrieve the account orders" that {
 
-      executions shouldBe a [List[_]]
-      if (executions.nonEmpty) executions.head shouldBe a [Execution]
-    }
+      "occurred today" in {
+        val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, None, List())
 
-    "retrieve the executions that occurred in a date range for an account" in {
-      val executions = testClient.getAccountExecutions(testAccessToken, testApiUrl, testAccountNumber, Some(ZonedDateTime.parse("2017-01-01T00:00:00.000000-04:00")), Some(ZonedDateTime.parse("2017-12-31T23:59:59.999999-04:00")))
+        orders shouldBe a [List[_]]
+        if (orders.nonEmpty) orders.head shouldBe a [Order]
+      }
 
-      executions shouldBe a [List[_]]
-      if (executions.nonEmpty) executions.head shouldBe a [Execution]
-    }
+      "occurred from a date" in {
+        val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-01-01T00:00:00.000000")), None, None, List())
 
-    "retrieve the orders the occurred today for an account" in {
-      val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, None, List())
+        orders shouldBe a [List[_]]
+        orders.size should be > 2
+        orders.head shouldBe a [Order]
+        this.testOrderNumberList = List(orders(0).id, orders(1).id)
+      }
 
-      orders shouldBe a [List[_]]
-      if (orders.nonEmpty) orders.head shouldBe a [Order]
-    }
+      "occurred in a date range" in {
+        val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(LocalDateTime.parse("2017-01-01T00:00:00.000000")), Some(LocalDateTime.parse("2017-12-31T23:59:59.999999")), None, List())
 
-    "retrieve the orders that occurred from a date for an account" in {
-      val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(ZonedDateTime.parse("2017-01-01T00:00:00.000000-04:00")), None, None, List())
+        orders shouldBe a [List[_]]
+        if (orders.nonEmpty) orders.head shouldBe a [Order]
+      }
 
-      orders shouldBe a [List[_]]
-      orders.size should be > 2
-      orders.head shouldBe a [Order]
-      this.testOrderNumberList = List(orders(0).id, orders(1).id)
-    }
+      "have a specific state" in {
+        val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, Some(OrderStateFilterType.Open), List())
 
-    "retrieve the orders that occurred in a date range for an account" in {
-      val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, Some(ZonedDateTime.parse("2017-01-01T00:00:00.000000-04:00")), Some(ZonedDateTime.parse("2017-12-31T23:59:59.999999-04:00")), None, List())
+        orders shouldBe a [List[_]]
+        if (orders.nonEmpty) orders.head shouldBe a [Order]
+      }
 
-      orders shouldBe a [List[_]]
-      if (orders.nonEmpty) orders.head shouldBe a [Order]
-    }
+      "have a specific orderId" in {
+        val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, None, testOrderNumberList)
 
-    "retrieve the orders of a specific state for an account" in {
-      val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, Some(OrderStateFilterType.Open), List())
+        orders shouldBe a [List[_]]
+        orders.head shouldBe a [Order]
+      }
 
-      orders shouldBe a [List[_]]
-      if (orders.nonEmpty) orders.head shouldBe a [Order]
-    }
-
-    "retrieve specific orders by orderId for an account" in {
-      val orders = testClient.getAccountOrders(testAccessToken, testApiUrl, testAccountNumber, None, None, None, testOrderNumberList)
-
-      orders shouldBe a [List[_]]
-      orders.head shouldBe a [Order]
     }
 
     "retrieve a single order for an account" in {
@@ -132,25 +140,36 @@ class QuestradeClientIntegrationTests extends WordSpecLike with Matchers {
       order.id should be (testOrderNumberList.head)
     }
 
-    "retrieve the activities that occurred from a date for an account" in {
-      val activities = testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, ZonedDateTime.parse("2017-01-01T00:00:00.000000-04:00"), None)
+    "retrieve the account activities" that {
 
-      activities shouldBe a [List[_]]
-      if (activities.nonEmpty) activities.head shouldBe a [Activity]
-    }
+      "occurred from a date" in {
+        val activities = testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.parse("2017-01-01T00:00:00.000000"), None)
 
-    "retrieve the activities that occurred under the API maximum of 31 days for an account" in {
-      val activities = testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, ZonedDateTime.parse("2017-01-01T00:00:00.000000-04:00"), Some(ZonedDateTime.parse("2017-01-15T23:59:59.999999-04:00")))
+        activities shouldBe a [List[_]]
+        if (activities.nonEmpty) activities.head shouldBe a [Activity]
+      }
 
-      activities shouldBe a [List[_]]
-      if (activities.nonEmpty) activities.head shouldBe a [Activity]
-    }
+      "occurred under the API maximum of 31 days" in {
+        val activities = testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.parse("2017-01-01T00:00:00.000000"), Some(LocalDateTime.parse("2017-01-15T23:59:59.999999")))
 
-    "retrieve activities that occurred over the API maximum of 31 days for an account" in {
-      val activities = testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, ZonedDateTime.parse("2017-01-01T00:00:00.000000-04:00"), Some(ZonedDateTime.parse("2017-07-31T23:59:59.999999-04:00")))
+        activities shouldBe a [List[_]]
+        if (activities.nonEmpty) activities.head shouldBe a [Activity]
+      }
 
-      activities shouldBe a [List[_]]
-      if (activities.nonEmpty) activities.head shouldBe a [Activity]
+      "occurred over the API maximum of 31 days" in {
+        val activities = testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.parse("2017-01-01T00:00:00.000000"), Some(LocalDateTime.parse("2017-07-31T23:59:59.999999")))
+
+        activities shouldBe a [List[_]]
+        if (activities.nonEmpty) activities.head shouldBe a [Activity]
+      }
+
+      "occurred over the API maximum of 31 days up until now" in {
+        val activities = testClient.getAccountActivities(testAccessToken, testApiUrl, testAccountNumber, LocalDateTime.of(LocalDate.parse("2017-01-01"), LocalTime.MIN), None)
+
+        activities shouldBe a [List[_]]
+        if (activities.nonEmpty) activities.head shouldBe a [Activity]
+      }
+
     }
   }
 }
